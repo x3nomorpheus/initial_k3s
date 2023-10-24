@@ -1,0 +1,76 @@
+    - name: Perform update
+      package:
+        name: '*'
+        state: latest
+
+    - name: get openssh-version
+      command: ssh -V
+      register: sshd_version_raw
+      changed_when: false
+      check_mode: false
+
+    - name: parse openssh-version
+      set_fact:
+        sshd_version: "{{ sshd_version_raw.stderr | regex_replace('.*_([0-9]*.[0-9]).*', '\\1') }}"
+        os_type: "{{ ansible_distribution }}"
+
+    - name: show
+      debug:
+        msg:
+          - "{{ ansible_distribution }}"
+
+    - name: Add local group
+      group:
+        name: admin
+        state: present
+
+    - name: Add local users
+      user:
+        name: "{{ item }}"
+        group: admin
+        shell: /bin/bash
+        home: "/home/{{ item }}"
+        create_home: yes
+        state: present
+      loop: "{{ ssh_users }}"
+
+    - name: Add SSH public key for users
+      authorized_key:
+        user: "{{ item }}"
+        key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+        state: present
+      loop: "{{ ssh_users }}"
+
+    - name: Add sudoer rule for local users
+      copy:
+        dest: /etc/sudoers.d/ans_users
+        src: sudoers
+        owner: root
+        group: root
+        mode: 0440
+        validate: /usr/sbin/visudo -csf %s
+
+    - name: Allow port on ufw
+      when: os_type == "Ubuntu"
+      ufw:
+        rule: allow
+        port: "{{ ssh_port }}"
+        proto: tcp
+
+    - name: Allow port on firewalld
+      when: os_type == "Rocky"
+      firewalld:
+        port: "{{ ssh_port }}/tcp"
+        zone: public
+        permanent: true
+        immediate: true
+        state: enabled
+
+    - name: Add hardened SSH config
+      template:
+        dest: /etc/ssh/sshd_config
+        src: sshd_config.j2
+        owner: root
+        group: root
+        mode: 0600
+      notify: Reload SSH

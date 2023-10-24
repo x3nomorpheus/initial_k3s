@@ -1,0 +1,26 @@
+---
+# All variables are the same as it named
+
+ssh_port: '22'
+
+ssh_permit_root_login: 'yes'
+
+ssh_max_auth_tries: '3'
+
+# List of users that will be created
+ssh_users: 'k3s_operator'
+
+ssh_allow_agent_forwarding: false
+
+ssh_allow_tcp_forwarding: 'no'
+
+ssh_gateway_ports: false
+
+ssh_x11_forwarding: false
+
+ssh_permit_user_environment: 'no'
+
+ssh_permit_tunnel: false
+
+#If its true ssh access restricted by usernames defined in ssh_users
+ssh_allow_users: true
