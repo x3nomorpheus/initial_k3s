@@ -1,0 +1,34 @@
+---
+
+- hosts: all
+  tags: preinstall
+  gather_facts: yes
+  become: yes
+  roles:
+    - ssh_hardening
+
+- hosts: k3s_cluster
+  tags: install
+  gather_facts: yes
+  become: yes
+  roles:
+    - role: prereq
+    - role: download
+
+- hosts: master
+  tags: install
+  become: yes
+  roles:
+    - role: k3s/master
+
+- hosts: node
+  tags: install
+  become: yes
+  roles:
+    - role: k3s/node
+
+- hosts: master
+  tags: postinstall
+  become: yes
+  roles:
+    - role: deployment 

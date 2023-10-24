@@ -1,8 +1,0 @@
----
-- hosts: all 
-  become: true
-  roles:
-    - ssh_hardening
-  vars:
-    ssh_users: ['k3s_operator']
-    ssh_port: '6733'

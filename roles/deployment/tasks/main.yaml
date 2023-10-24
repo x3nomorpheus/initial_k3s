@@ -1,0 +1,10 @@
+---
+
+  - name: Deploy Wordpress chart on 18.0.8 with values loaded from template
+    kubernetes.core.helm:
+      name: cms
+      chart_ref: oci://registry-1.docker.io/bitnamicharts/wordpress
+      chart_version: 18.0.8
+      release_state: present
+      update_repo_cache: true
+      release_namespace: default
