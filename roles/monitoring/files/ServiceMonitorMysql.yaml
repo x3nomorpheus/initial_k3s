@@ -1,0 +1,12 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: prom-operator-mysqld-exporter
+  labels:
+    release: prom-operator
+spec:
+  endpoints:
+    - interval: 5s
+  selector:
+    matchLabels:
+      exporter: mysqld-exporter

@@ -1,10 +1,42 @@
 ---
 
+  - name: install pip if necessary
+    when: os_type == "Ubuntu" 
+    apt: name=python3-pip state=present 
+
+  - name: Install python deps
+    pip:
+      name: kubernetes
+
+  - name: Install helm
+    unarchive:
+      src: https://get.helm.sh/helm-v3.11.0-linux-amd64.tar.gz
+      dest: /usr/local/bin
+      extra_opts: "--strip-components=1"
+      owner: root
+      group: root
+      mode: 0755
+      remote_src: true
+    args:
+      creates: /usr/local/bin/helm
+
+  - name: Init directory for some files
+    file:
+      path: /home/k3s
+      state: directory
+      mode: '0755'
+
+  - name: Transfer values
+    copy:
+      src: "{{ role_path }}/files/wordpress/values.yaml"
+      dest: /home/k3s/wordpress-values.yaml 
+
   - name: Deploy Wordpress chart on 18.0.8 with values loaded from template
     kubernetes.core.helm:
       name: cms
       chart_ref: oci://registry-1.docker.io/bitnamicharts/wordpress
       chart_version: 18.0.8
       release_state: present
-      update_repo_cache: true
       release_namespace: default
+      values_files:
+        -  /home/k3s/wordpress-values.yaml

@@ -27,8 +27,14 @@
   roles:
     - role: k3s/node
 
-- hosts: master
+- hosts: deploy_node 
   tags: postinstall
   become: yes
   roles:
-    - role: deployment 
+    - role: deployment
+
+- hosts: deploy_node
+  tags: monitoring
+  become: yes
+  roles:
+    - role: monitoring 

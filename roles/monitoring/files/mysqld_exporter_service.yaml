@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysqld-exporter
+  labels:
+    exporter: mysqld-exporter
+spec:
+  type: ClusterIP
+  ports:
+  - port: 9104
+    protocol: TCP
+    name: http
+  selector:
+    app: mysqld-exporter
+

@@ -57,14 +57,12 @@
         port: "{{ ssh_port }}"
         proto: tcp
 
-    - name: Allow port on firewalld
+    - name: Disable firewalld
       when: os_type == "Rocky"
-      firewalld:
-        port: "{{ ssh_port }}/tcp"
-        zone: public
-        permanent: true
-        immediate: true
-        state: enabled
+      systemd:
+        state: stopped
+        enabled: false
+        name: firewalld
 
     - name: Add hardened SSH config
       template:
