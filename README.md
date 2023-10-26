@@ -63,3 +63,9 @@ ansible-playbook init.yaml --tag install
 ### Reset k3s
 
 As mentioned above for installing k3s was used official repo of k3s ansible installation, so this role was brought from there too. From its name we can understand that this will delete installation of k3s.
+
+To reset k3s run:
+
+```bash
+ansible-playbook reset.yaml
+```
