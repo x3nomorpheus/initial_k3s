@@ -25,6 +25,8 @@ Monitoring role installs kube-prometheus-stack which includes full prometheus st
 ### ElasticSearch Fluentd Kibana deployment
 
 This playbook is a part of monitoring role. It installs python deps for using htpasswd which creates attrs for kibana. The feature of this playbook is that all deployments were written in manifests without using helm and special operators. 
+> [!NOTE]
+> There is a bug in fluentd timestamp parser, so the solution for this was using the variable efk_timezone which must be setted in type like `"+03:00"`, but for most servers the value of this variable must be *Z*
 
 ## System requirements
 Playbooks tested on Ansible [core 2.14.2]
@@ -54,6 +56,7 @@ kibana_password: "<set_your_password_here>"
 ```
 > [!IMPORTANT]
 >For the testing purposes set certmanager_issuer: letsencrypt-staging in `inventory/group_vars/all.yml`
+
 
 And we are ready to go with
 

@@ -9,7 +9,7 @@ efk_elasticMemoryRequests: 2Gi
 efk_elasticMemoryLimit: 4Gi
 efk_elasticCpuRequests: 500m
 efk_elasticCpuLimit: 1000m
-efk_timezone:  '+03:00'
+efk_timezone:  'Z'
 efk_fluentdMemoryLimit: '4Gi'
 efk_fluentdMemoryRequest: '2Gi'
 efk_fluentdCpuLimit: '200m'
