@@ -9,21 +9,20 @@
       mariadb_pass: "{{ mariadb_pass_raw.stdout | b64decode }}"
       exporter_pass: "{{ lookup('password', '/dev/null length=15 chars=ascii_letters') }}"
       
-  - name: print fact
-    ansible.builtin.debug:
-      msg:
-      - "{{ exporter_pass }}"
-
   - name: Add helm repo
     kubernetes.core.helm_repository:
       name: prometheus-community
       repo_url: https://prometheus-community.github.io/helm-charts
 
-  - name: Transfer values
-    copy:
-      src: "{{ role_path }}/files/grafana/values.yaml"
+  - name: Transfer grafana values
+    template:
+      src: "{{ role_path }}/templates/grafana/values.yaml.j2"
       dest: /home/k3s/grafana_values.yaml
 
+  - name: Transfer alertmanager values
+    template:
+      src: "{{ role_path }}/templates/alertmanager/values.yaml.j2"
+      dest: /home/k3s/alertmanager_values.yaml
 
   - name: Deploy Prometheus Operator with helm
     kubernetes.core.helm:
@@ -33,6 +32,7 @@
       release_namespace: default
       values_files:
       -  /home/k3s/grafana_values.yaml
+      -  /home/k3s/alertmanager_values.yaml
 
   - name: Delete old user if exists
     kubernetes.core.k8s_exec:
@@ -88,6 +88,7 @@
         - op: add
           path: /metadata/labels/exporter
           value: apache
+
   - name: Load rules for database
     kubernetes.core.k8s:
       state: present
@@ -119,3 +120,7 @@
           name: prometheus-apache-rules
         spec:
           "{{ lookup('file', 'alerts/apache-exporter.yml') | from_yaml }}"
+
+  - name: include efk stack
+    include_tasks:
+      file: efk-setup.yaml

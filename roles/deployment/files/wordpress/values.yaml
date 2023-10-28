@@ -1,9 +1,0 @@
-metrics:
-  enabled: true
-  image:
-    registry: docker.io
-    repository: bitnami/apache-exporter
-    tag: 0.8.0-debian-10-r3
-  service:
-    ports:
-      metrics: 9150

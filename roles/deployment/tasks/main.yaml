@@ -2,7 +2,7 @@
 
   - name: install pip if necessary
     when: os_type == "Ubuntu" 
-    apt: name=python3-pip state=present 
+    apt: name=python3-pip state=present
 
   - name: Install python deps
     pip:
@@ -27,9 +27,32 @@
       mode: '0755'
 
   - name: Transfer values
-    copy:
-      src: "{{ role_path }}/files/wordpress/values.yaml"
+    template:
+      src: "{{ role_path }}/templates/wordpress/values.yaml.j2"
       dest: /home/k3s/wordpress-values.yaml 
+
+  - name: Add certManager repo
+    kubernetes.core.helm_repository:
+      name: jetstack
+      repo_url: https://charts.jetstack.io
+
+  - name: Download certmanager CRDs
+    get_url:
+      url: https://github.com/jetstack/cert-manager/releases/download/v1.1.0/cert-manager.crds.yaml
+      dest: /home/k3s/cert-manager.crds.yaml
+
+  - name: Apply CertManager CRDs
+    kubernetes.core.k8s:
+      state: present
+      src: /home/k3s/cert-manager.crds.yaml
+
+  - name: Install CertManager with helm
+    kubernetes.core.helm:
+      name: certmanager
+      chart_ref: jetstack/cert-manager
+      release_namespace: default
+      release_state: present
+
 
   - name: Deploy Wordpress chart on 18.0.8 with values loaded from template
     kubernetes.core.helm:

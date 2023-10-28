@@ -34,7 +34,15 @@
     - role: deployment
 
 - hosts: deploy_node
+  vars_files:
+    - inventory/vault-pass.yaml
   tags: monitoring
   become: yes
   roles:
     - role: monitoring 
+
+- hosts: deploy_node
+  tags: ingress
+  become: yes
+  roles:
+    - role: ingress

@@ -1,0 +1,3 @@
+grafana_password: 'prom-operator'
+grafana_domain: 'grafana.local'
+alertmanager_domain: 'alertmanager.local'

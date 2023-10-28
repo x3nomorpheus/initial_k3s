@@ -1,0 +1,42 @@
+
+  - name: Install python deps
+    pip:
+      name: passlib 
+
+  - name: Gen htpasswd
+    htpasswd:
+      path: /home/k3s/passwd
+      name: "{{ kibana_username }}"
+      password: "{{ kibana_password }}"
+
+  - name: Create secret for kibana
+    kubernetes.core.k8s:
+      state: present
+      definition:
+        apiVersion: v1
+        kind: Secret
+        type: Opaque
+        metadata:
+          name: kibana-secret
+          namespace: default
+        data:
+          auth: "{{ lookup('file', '/home/k3s/passwd') | b64encode }}" 
+
+  - name: Apply elasticsearch manifests
+    kubernetes.core.k8s:
+      state: present
+      namespace: default
+      definition: "{{ lookup('file', 'kubernetes-efk/elasticsearch/es.yaml') | from_yaml_all }}"
+
+  - name: Apply Fluentd manifests
+    kubernetes.core.k8s:
+      state: present
+      namespace: default
+      definition: "{{ lookup('file', 'kubernetes-efk/fluentd/fluentd.yaml') | from_yaml_all }}"
+
+  - name: Apply Kibana manifests
+    kubernetes.core.k8s:
+      state: present
+      namespace: default
+      definition: "{{ lookup('file', 'kubernetes-efk/kibana/kibana.yaml') | from_yaml_all }}"
+

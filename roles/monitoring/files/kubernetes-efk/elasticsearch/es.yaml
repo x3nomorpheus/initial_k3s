@@ -1,0 +1,145 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: elasticsearch
+  namespace: default
+spec:
+  serviceName: elasticsearch
+  replicas: 3
+  updateStrategy:
+    type: OnDelete
+  selector:
+    matchLabels:
+      app: elasticsearch
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+    spec:
+      securityContext:
+        fsGroup: 1000
+      initContainers:
+        - name: increase-vm-max-map
+          image: busybox
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+          command: [ "sysctl", "-w", "vm.max_map_count=262144" ]
+      containers:
+        - name: elasticsearch
+          image: docker.elastic.co/elasticsearch/elasticsearch:8.3.2
+          env:
+            - name: node.name
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: NODE_MASTER
+              valueFrom:
+                configMapKeyRef:
+                  name: elasticsearch-config
+                  key: NODE_MASTER
+            - name: NODE_DATA
+              valueFrom:
+                configMapKeyRef:
+                  name: elasticsearch-config
+                  key: NODE_DATA
+            - name: NUMBER_OF_MASTERS
+              valueFrom:
+                configMapKeyRef:
+                  name: elasticsearch-config
+                  key: NUMBER_OF_MASTERS
+            - name: NUMBER_OF_REPLICAS
+              valueFrom:
+                configMapKeyRef:
+                  name: elasticsearch-config
+                  key: NUMBER_OF_REPLICAS
+            - name: ES_JAVA_OPTS
+              valueFrom:
+                configMapKeyRef:
+                  name: elasticsearch-config
+                  key: ES_JAVA_OPTS
+            - name: ES_PORT
+              value: "9200"
+          ports:
+            - containerPort: 9200
+              name: rest
+              protocol: TCP
+            - containerPort: 9300
+              name: transport
+              protocol: TCP
+          volumeMounts:
+            - name: elasticsearch-data
+              mountPath: /usr/share/elasticsearch/data
+            - name: elasticsearch-yml
+              mountPath: /usr/share/elasticsearch/config/elasticsearch.yml
+              subPath: elasticsearch.yml
+          resources:
+            requests:
+              cpu: "1000m"
+              memory: "2Gi"
+            limits:
+              cpu: "1000m"
+              memory: "2Gi"      
+      volumes:
+      - name: elasticsearch-yml
+        configMap:
+          name: elasticsearch-config
+          items:
+            - key: elasticsearch.yml
+              path: elasticsearch.yml
+  volumeClaimTemplates:
+    - metadata:
+        name: elasticsearch-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 25Gi
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch
+  namespace: default
+  labels:
+    app: elasticsearch
+spec:
+  selector:
+    app: elasticsearch
+  ports:
+    - name: rest
+      port: 9200
+      targetPort: 9200
+    - name: transport
+      port: 9300
+      targetPort: 9300
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: elasticsearch-config
+  namespace: default
+data:
+  elasticsearch.yml: |
+    cluster.name: "elasticsearch"
+    bootstrap.memory_lock: false
+    xpack.license.self_generated.type: basic
+    network.host: "0.0.0.0"
+    logger.org.elasticsearch.transport: error
+    logger.org.elasticsearch.discovery: error
+    xpack.security.enabled: false
+    discovery.seed_hosts:
+       - elasticsearch-0.elasticsearch.default.svc.cluster.local:9300
+       - elasticsearch-1.elasticsearch.default.svc.cluster.local:9300
+       - elasticsearch-2.elasticsearch.default.svc.cluster.local:9300
+    cluster.initial_master_nodes:
+       - elasticsearch-0
+       - elasticsearch-1
+       - elasticsearch-2
+  NODE_MASTER: "true"
+  NODE_DATA: "true"
+  NUMBER_OF_MASTERS: "3"
+  NUMBER_OF_REPLICAS: "2"
+  ES_JAVA_OPTS: "-Djava.net.preferIPv4Stack=true -Xms1750m -Xmx1750m"

@@ -1,0 +1,18 @@
+metrics:
+  enabled: true
+  image:
+    registry: docker.io
+    repository: bitnami/apache-exporter
+    tag: 0.8.0-debian-10-r3
+  service:
+    ports:
+      metrics: 9150
+service:
+  type: ClusterIP
+ingress:
+  enabled: true
+  tls: true
+  annotations:
+    cert-manager.io/issuer: "letsencrypt-staging" 
+  hostname: {{ wordpress_domain }}
+  ingressClassName: nginx

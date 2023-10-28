@@ -1,0 +1,12 @@
+alertmanager:
+  ingress:
+    enabled: true
+    annotations:
+      cert-manager.io/issuer: "letsencrypt-staging"
+    ingressClassName: nginx
+    hosts:
+      - "{{ alertmanager_domain }}"
+    tls:
+      - secretName: alertmanager-tls
+        hosts:
+        - "{{ alertmanager_domain }}"
