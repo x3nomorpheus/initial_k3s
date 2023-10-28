@@ -9,7 +9,7 @@
       mariadb_pass: "{{ mariadb_pass_raw.stdout | b64decode }}"
       exporter_pass: "{{ lookup('password', '/dev/null length=15 chars=ascii_letters') }}"
       
-  - name: Add helm repo
+  - name: Add Prometheus stack repo
     kubernetes.core.helm_repository:
       name: prometheus-community
       repo_url: https://prometheus-community.github.io/helm-charts

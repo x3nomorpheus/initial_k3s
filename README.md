@@ -10,13 +10,21 @@ This playbook prepare hosts to installing k3s. It adds local user (or users) wit
 
 This role was copied from official repo of ansible k3s deployment. Also, for reduce unused roles the raspberry role was deleted. The other things are the same. If you want more info about you can find it [here](https://github.com/k3s-io/k3s-ansible)
 
+## Ingress
+
+Just setting up nginx ingress controller.
+
 ## Postinstall
 
-With this role we install pip, kubernetes library, create working directory for some custom values of helm charts and install helm. After that it deploys wordpress with helm.
+With this role we install pip, kubernetes library, create working directory for some custom values of helm charts and install helm. Next it fully deploys certmanager and creates issuer for future certs.  After that it deploys wordpress with helm (which inludes enabled apache-exporter and ingress object).
 
 ## Monitoring
 
-Monitoring role installs kube-prometheus-stack which includes full prometheus stack, grafana and also prometheus operator. After that it creates deployment of mysql exporter, creates user for it *(with privileges PROCESS, REPLICATION CLIENT, REPLICATION SLAVE)*, service for it and also creates serviceMonitors for apache and mysql exporter to add targets into the prometheus. At final steps it adds rules for apache and mysql.
+Monitoring role installs kube-prometheus-stack which includes full prometheus stack, grafana and also prometheus operator. Installation of kube-prometheus-stack includes ingress resources for alertmanager and grafana, two imported dashboards in grafana for mysql and apache exporter data visualisation. After that it creates deployment of mysql exporter, creates user for it *(with privileges PROCESS, REPLICATION CLIENT, REPLICATION SLAVE)*, service for it and also creates serviceMonitors for apache and mysql exporter to add targets into the prometheus. Following step it adds rules for apache and mysql. And at final task it installs efk stack.
+
+### ElasticSearch Fluentd Kibana deployment
+
+This playbook is a part of monitoring role. It installs python deps for using htpasswd which creates attrs for kibana. The feature of this playbook is that all deployments were written in manifests without using helm and special operators. 
 
 ## System requirements
 Playbooks tested on Ansible [core 2.14.2]
@@ -35,6 +43,17 @@ ansible-galaxy collection install -r collections/requirements.yml
 After that set proper hosts for you in `inventory/hosts.ini`.
 
 If you want you can set some variables by your needs in `inventory/group_vars/all.yml`. List of all avaliable variables you can find in `roles/*/defaults/main.yaml`
+
+*Create file `inventory/vault-pass.yaml` for set next values:*
+
+```
+grafana_password: "<set_your_password_here>"
+kibana_username: "<set_your_password_here>"
+kibana_password: "<set_your_password_here>"
+
+```
+> [!IMPORTANT]
+>For the testing purposes set certmanager_issuer: letsencrypt-staging in `inventory/group_vars/all.yml`
 
 And we are ready to go with
 

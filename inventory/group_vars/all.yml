@@ -11,3 +11,6 @@ ssh_port: '6733'
 wordpress_domain: wordpress.local
 grafana_domain: grafana.local
 alertmanager_domain: alertmanager.local
+certmanager_issuer: letsencrypt-prod
+wordpress_name: cms
+wordpress_namespace: default

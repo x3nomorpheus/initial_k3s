@@ -69,7 +69,7 @@ kind: Ingress
 metadata:
   name: kibana-ingress
   annotations:
-    cert-manager.io/issuer: "letsencrypt-staging"
+    cert-manager.io/issuer: "{{ certmanager_issuer }}"
     nginx.ingress.kubernetes.io/auth-type: basic
     nginx.ingress.kubernetes.io/auth-secret: kibana-secret
     nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required - kibana-admin'
