@@ -41,12 +41,12 @@ spec:
         image: docker.elastic.co/kibana/kibana:8.3.2
         resources:
           limits:
-            cpu: 1000m
+            cpu: "{{ efk_kibanaCpuLimit }}"
           requests:
-            cpu: 100m
+            cpu: "{{ efk_kibanaCpuRequest }}"
         env:
           - name: ELASTICSEARCH_HOST
-            value: "http://elasticsearch.default.svc.cluster.local:9200"
+            value: "http://elasticsearch.{{ efk_namespace }}.svc.cluster.local:9200"
         ports:
         - containerPort: 5601
 ---
@@ -77,10 +77,10 @@ spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - kibana.local
+    - "{{ efk_kibanaDomain }}"
     secretName: kibana-tls
   rules:
-  - host: kibana.local
+  - host: "{{ efk_kibanaDomain }}"
     http:
       paths:
       - backend:
