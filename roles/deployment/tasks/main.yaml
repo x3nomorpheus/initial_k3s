@@ -1,8 +1,7 @@
 ---
 
-  - name: install pip if necessary
-    when: os_type == "Ubuntu" 
-    apt: name=python3-pip state=present
+  - name: Install pip if necessary
+    package: name=python3-pip state=present
 
   - name: Install python deps
     pip:
@@ -10,7 +9,7 @@
 
   - name: Install helm
     unarchive:
-      src: https://get.helm.sh/helm-v3.11.0-linux-amd64.tar.gz
+      src: "https://get.helm.sh/helm-v{{ helm_version }}-linux-amd64.tar.gz"
       dest: /usr/local/bin
       extra_opts: "--strip-components=1"
       owner: root
@@ -38,7 +37,7 @@
 
   - name: Download certmanager CRDs
     get_url:
-      url: https://github.com/jetstack/cert-manager/releases/download/v1.1.0/cert-manager.crds.yaml
+      url: "https://github.com/jetstack/cert-manager/releases/download/v{{ certmanagerCrd_version }}/cert-manager.crds.yaml"
       dest: /home/k3s/cert-manager.crds.yaml
 
   - name: Apply CertManager CRDs
@@ -48,18 +47,23 @@
 
   - name: Install CertManager with helm
     kubernetes.core.helm:
-      name: certmanager
+      name: "{{ certmanager_name }}"
       chart_ref: jetstack/cert-manager
-      release_namespace: default
+      release_namespace: "{{ certmanager_namespace }}"
+      create_namespace: true
       release_state: present
 
+  - name: Create Issuer
+    kubernetes.core.k8s:
+      namespace: "{{ certmanager_namespace }}"
+      definition: "{{ lookup('file', '{{ certmanager_issuer }}.yaml') | from_yaml_all }}"
 
-  - name: Deploy Wordpress chart on 18.0.8 with values loaded from template
+  - name: Deploy Wordpress with helm
     kubernetes.core.helm:
-      name: cms
+      name: "{{ wordpress_name }}"
       chart_ref: oci://registry-1.docker.io/bitnamicharts/wordpress
-      chart_version: 18.0.8
       release_state: present
-      release_namespace: default
+      release_namespace: "{{ wordpress_namespace }}"
+      create_namespace: true
       values_files:
         -  /home/k3s/wordpress-values.yaml

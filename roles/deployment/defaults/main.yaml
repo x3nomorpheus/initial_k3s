@@ -1,2 +1,9 @@
 #Wordpress domain for ingress
 wordpress_domain: wordpress.local
+wordpress_name: cms
+wordpress_namespace: default
+helm_version: 3.13.1
+certmanagerCrd_version: 1.13.1
+certmanager_name: certmanager
+certmanager_namespace: default
+certmanager_issuer: letsencrypt-staging

@@ -12,12 +12,6 @@
     - name: parse openssh-version
       set_fact:
         sshd_version: "{{ sshd_version_raw.stderr | regex_replace('.*_([0-9]*.[0-9]).*', '\\1') }}"
-        os_type: "{{ ansible_distribution }}"
-
-    - name: show
-      debug:
-        msg:
-          - "{{ ansible_distribution }}"
 
     - name: Add local group
       group:
@@ -51,14 +45,14 @@
         validate: /usr/sbin/visudo -csf %s
 
     - name: Allow port on ufw
-      when: os_type == "Ubuntu"
+      when: ansible_distribution == "Ubuntu"
       ufw:
         rule: allow
         port: "{{ ssh_port }}"
         proto: tcp
 
     - name: Disable firewalld
-      when: os_type == "Rocky"
+      when: ansible_distribution == "Rocky"
       systemd:
         state: stopped
         enabled: false

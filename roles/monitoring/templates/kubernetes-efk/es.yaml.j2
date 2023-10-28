@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: elasticsearch
-  namespace: default
 spec:
   serviceName: elasticsearch
   replicas: 3
@@ -75,11 +74,11 @@ spec:
               subPath: elasticsearch.yml
           resources:
             requests:
-              cpu: "1000m"
-              memory: "2Gi"
+              cpu: "{{ efk_elasticCpuLimit }}"
+              memory: "{{ efk_elasticMemoryLimit }}"
             limits:
-              cpu: "1000m"
-              memory: "2Gi"      
+              cpu: "{{ efk_elasticCpuLimit }}"
+              memory: "{{ efk_elasticMemoryLimit }}" 
       volumes:
       - name: elasticsearch-yml
         configMap:
@@ -94,14 +93,13 @@ spec:
         accessModes: [ "ReadWriteOnce" ]
         resources:
           requests:
-            storage: 25Gi
+            storage: "{{ efk_storageSpace }}"
 ---
 
 apiVersion: v1
 kind: Service
 metadata:
   name: elasticsearch
-  namespace: default
   labels:
     app: elasticsearch
 spec:
@@ -120,7 +118,6 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: elasticsearch-config
-  namespace: default
 data:
   elasticsearch.yml: |
     cluster.name: "elasticsearch"
@@ -131,9 +128,9 @@ data:
     logger.org.elasticsearch.discovery: error
     xpack.security.enabled: false
     discovery.seed_hosts:
-       - elasticsearch-0.elasticsearch.default.svc.cluster.local:9300
-       - elasticsearch-1.elasticsearch.default.svc.cluster.local:9300
-       - elasticsearch-2.elasticsearch.default.svc.cluster.local:9300
+       - "elasticsearch-0.elasticsearch.{{ efk_namespace }}.svc.cluster.local:9300"
+       - "elasticsearch-1.elasticsearch.{{ efk_namespace }}.svc.cluster.local:9300"
+       - "elasticsearch-2.elasticsearch.{{ efk_namespace }}.svc.cluster.local:9300"
     cluster.initial_master_nodes:
        - elasticsearch-0
        - elasticsearch-1

@@ -27,6 +27,12 @@
   roles:
     - role: k3s/node
 
+- hosts: deploy_node
+  tags: ingress
+  become: yes
+  roles:
+    - role: ingress
+
 - hosts: deploy_node 
   tags: postinstall
   become: yes
@@ -41,8 +47,3 @@
   roles:
     - role: monitoring 
 
-- hosts: deploy_node
-  tags: ingress
-  become: yes
-  roles:
-    - role: ingress

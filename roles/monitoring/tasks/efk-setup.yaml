@@ -1,3 +1,4 @@
+---
 
   - name: Install python deps
     pip:
@@ -9,6 +10,13 @@
       name: "{{ kibana_username }}"
       password: "{{ kibana_password }}"
 
+  - name: Create efk namespace
+    kubernetes.core.k8s:
+      name: "{{ efk_namespace }}"
+      api_version: v1
+      kind: Namespace
+      state: present
+
   - name: Create secret for kibana
     kubernetes.core.k8s:
       state: present
@@ -18,25 +26,25 @@
         type: Opaque
         metadata:
           name: kibana-secret
-          namespace: default
+          namespace: "{{ efk_namespace }}"
         data:
           auth: "{{ lookup('file', '/home/k3s/passwd') | b64encode }}" 
 
   - name: Apply elasticsearch manifests
     kubernetes.core.k8s:
       state: present
-      namespace: default
-      definition: "{{ lookup('file', 'kubernetes-efk/elasticsearch/es.yaml') | from_yaml_all }}"
+      namespace: "{{ efk_namespace }}" 
+      definition: "{{ lookup('template', 'kubernetes-efk/es.yaml.j2') | from_yaml_all }}"
 
   - name: Apply Fluentd manifests
     kubernetes.core.k8s:
       state: present
-      namespace: default
-      definition: "{{ lookup('file', 'kubernetes-efk/fluentd/fluentd.yaml') | from_yaml_all }}"
+      namespace: "{{ efk_namespace }}"
+      definition: "{{ lookup('template', 'kubernetes-efk/fluentd.yaml.j2') | from_yaml_all }}"
 
   - name: Apply Kibana manifests
     kubernetes.core.k8s:
       state: present
-      namespace: default
-      definition: "{{ lookup('file', 'kubernetes-efk/kibana/kibana.yaml') | from_yaml_all }}"
+      namespace: "{{ efk_namespace }}"
+      definition: "{{ lookup('template', 'kubernetes-efk/kibana.yaml.j2') | from_yaml_all }}"
 

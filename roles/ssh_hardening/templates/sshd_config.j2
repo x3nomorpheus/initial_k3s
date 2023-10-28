@@ -141,7 +141,7 @@ PermitTunnel {{ 'yes' if (ssh_permit_tunnel|bool) else 'no' }}
 AcceptEnv LANG LC_*
 
 # override default of no subsystems
-{% if os_type == 'Ubuntu' %}
+{% if ansible_distribution == 'Ubuntu' %}
 Subsystem	sftp	/usr/lib/openssh/sftp-server
 {% else %}
 Subsystem       sftp    /usr/libexec/openssh/sftp-server

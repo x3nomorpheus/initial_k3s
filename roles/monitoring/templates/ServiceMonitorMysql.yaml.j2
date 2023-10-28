@@ -1,9 +1,9 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: prom-operator-mysqld-exporter
+  name: "{{ prometheusOperator_name }}-mysqld-exporter"
   labels:
-    release: prom-operator
+    release: "{{ prometheusOperator_name }}"
 spec:
   endpoints:
     - interval: 5s

@@ -10,4 +10,4 @@
       name: nginx-ingress
       chart_ref: ingress-nginx/ingress-nginx
       release_state: present
-      release_namespace: default
+      release_namespace: "{{ ingress_namespace }}"

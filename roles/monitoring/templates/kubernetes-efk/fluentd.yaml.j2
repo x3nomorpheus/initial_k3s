@@ -20,7 +20,7 @@ spec:
         image: fluent/fluentd-kubernetes-daemonset:v1-debian-elasticsearch8
         env:
           - name:  FLUENT_ELASTICSEARCH_HOST
-            value: "elasticsearch.default.svc.cluster.local"
+            value: "elasticsearch.{{ efk_namespace }}.svc.cluster.local"
           - name:  FLUENT_ELASTICSEARCH_PORT
             value: "9200"
           - name: FLUENT_ELASTICSEARCH_SCHEME
@@ -30,8 +30,10 @@ spec:
           - name: FLUENT_CONTAINER_TAIL_EXCLUDE_PATH
             value: /var/log/containers/fluent*
           - name: FLUENT_CONTAINER_TAIL_PARSER_TIME_FORMAT
-            value: "%Y-%m-%dT%H:%M:%S.%N+03:00"
+            # This parametr doesn't work as expected with timezone regexp, so we set it with Ansible  
+            value: "%Y-%m-%dT%H:%M:%S.%N{{ efk_timezone }}"
           - name: FLUENT_CONTAINER_TAIL_PARSER_TYPE
+            # Parser type for containerd runtime
             value: '/^(?<time>.+) (?<stream>stdout|stderr)( (?<logtag>.))? (?<log>.*)$/'
           - name: FLUENT_ELASTICSEARCH_BUFFER_CHUNK_LIMIT_SIZE
             value: "10M"
@@ -41,10 +43,10 @@ spec:
             value: "16"
         resources:
           limits:
-            memory: 4096Mi
+            memory: "{{ efk_fluentdMemoryLimit }}"
           requests:
-            cpu: 200m
-            memory: 2048Mi
+            cpu: "{{ efk_fluentdCpuLimit }}"
+            memory: "{{ efk_fluentdMemoryRequest }}"
         volumeMounts:
         - name: varlog
           mountPath: /var/log
@@ -72,7 +74,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: fluentd
-  namespace: default
+  namespace: "{{ efk_namespace }}"
 ---
 
 apiVersion: rbac.authorization.k8s.io/v1

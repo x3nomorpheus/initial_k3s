@@ -52,4 +52,4 @@ spec:
           protocol: TCP
         env:
         - name: DATA_SOURCE_NAME
-          value: "mysqld_exporter:{{ exporter_pass }}@(cms-mariadb.default.svc.cluster.local:3306)/"
+          value: "mysqld_exporter:{{ exporter_pass }}@({{ wordpress_name }}-mariadb.{{ wordpress_namespace }}.svc.cluster.local:3306)/"

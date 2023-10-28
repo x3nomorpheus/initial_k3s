@@ -1,10 +1,10 @@
 ---
 
   - name: Pull mariadb_pass
-    command: "kubectl get secret -o jsonpath={.data.mariadb-root-password} cms-mariadb"
+    command: "kubectl get secret -o jsonpath={.data.mariadb-root-password} {{ wordpress_name }}-mariadb"
     register: mariadb_pass_raw
 
-  - name: Parse mariadb_pass
+  - name: Setting fact with pwds
     set_fact:
       mariadb_pass: "{{ mariadb_pass_raw.stdout | b64decode }}"
       exporter_pass: "{{ lookup('password', '/dev/null length=15 chars=ascii_letters') }}"
@@ -26,31 +26,32 @@
 
   - name: Deploy Prometheus Operator with helm
     kubernetes.core.helm:
-      name: prom-operator
+      name: "{{ prometheusOperator_name }}"
       chart_ref: prometheus-community/kube-prometheus-stack
       update_repo_cache: true
-      release_namespace: default
+      release_namespace: "{{ prometheusOperator_namespace }}"
+      create_namespace: true
       values_files:
       -  /home/k3s/grafana_values.yaml
       -  /home/k3s/alertmanager_values.yaml
 
   - name: Delete old user if exists
     kubernetes.core.k8s_exec:
-      namespace: default
-      pod: cms-mariadb-0
+      namespace: "{{ wordpress_namespace }}"
+      pod: "{{ wordpress_name }}-mariadb-0"
       command: mariadb -uroot -p"{{ mariadb_pass }}" -e "DROP USER mysqld_exporter;"
     ignore_errors: true
 
   - name: Create user for mysql exporter
     kubernetes.core.k8s_exec:
-      namespace: default
-      pod: cms-mariadb-0
+      namespace: "{{ wordpress_namespace }}"
+      pod: "{{ wordpress_name }}-mariadb-0"
       command: mariadb -uroot -p"{{ mariadb_pass }}" -e "CREATE USER 'mysqld_exporter' IDENTIFIED BY '"{{ exporter_pass }}"' WITH MAX_USER_CONNECTIONS 3;"
 
   - name: Grant privileges for mysql exporter
     kubernetes.core.k8s_exec:
-      namespace: default
-      pod: cms-mariadb-0
+      namespace: "{{ wordpress_namespace }}"
+      pod: "{{ wordpress_name }}-mariadb-0"
       command: 
         mysql -uroot -p"{{ mariadb_pass }}" -e "GRANT PROCESS, REPLICATION CLIENT, REPLICATION SLAVE, SELECT ON *.* TO 'mysqld_exporter';"
         mysql -uroot -p"{{ mariadb_pass }}" -e "flush privileges;"
@@ -58,32 +59,32 @@
   - name: Deploy mysqld_exporter
     kubernetes.core.k8s:
       state: present
-      namespace: default
+      namespace: "{{ wordpress_namespace }}"
       definition: "{{ lookup('template', 'mysqld_exporter.yaml.j2') | from_yaml }}"
 
   - name: Service for mysqld_exporter
     kubernetes.core.k8s:
       state: present
-      namespace: default
+      namespace: "{{ wordpress_namespace }}"
       definition: "{{ lookup('file', 'mysqld_exporter_service.yaml') | from_yaml }}"
                 
   - name: Create ServiceMonitor
     kubernetes.core.k8s:
       state: present
-      namespace: default
-      definition: "{{ lookup('file', 'ServiceMonitorMysql.yaml') | from_yaml }}"
+      namespace: "{{ wordpress_namespace }}"
+      definition: "{{ lookup('template', 'ServiceMonitorMysql.yaml.j2') | from_yaml }}"
 
   - name: Create ServiceMonitor for apache exporter
     kubernetes.core.k8s:
       state: present
-      namespace: default
-      definition: "{{ lookup('file', 'ServiceMonitorWordpress.yaml') | from_yaml }}"
+      namespace: "{{ wordpress_namespace }}"
+      definition: "{{ lookup('template', 'ServiceMonitorWordpress.yaml.j2') | from_yaml }}"
     
   - name: Patch wordpress metric service
     kubernetes.core.k8s_json_patch:
       kind: Service
-      namespace: default
-      name: cms-wordpress-metrics
+      namespace: "{{ wordpress_namespace }}"
+      name: "{{ wordpress_name }}-wordpress-metrics"
       patch:
         - op: add
           path: /metadata/labels/exporter
@@ -92,7 +93,7 @@
   - name: Load rules for database
     kubernetes.core.k8s:
       state: present
-      namespace: default
+      namespace: "{{ prometheusOperator_namespace }}"
       definition:
         apiVersion: monitoring.coreos.com/v1
         kind: PrometheusRule
@@ -100,7 +101,7 @@
           creationTimestamp: null
           labels:
             role: alert-rules
-            release: prom-operator
+            release: "{{ prometheusOperator_name }}"
           name: prometheus-mysql-rules
         spec:
           "{{ lookup('file', 'alerts/mysqld-exporter.yml') | from_yaml }}"
@@ -108,7 +109,7 @@
   - name: Load rules for apache
     kubernetes.core.k8s:
       state: present
-      namespace: default
+      namespace: "{{ prometheusOperator_namespace }}"
       definition:
         apiVersion: monitoring.coreos.com/v1
         kind: PrometheusRule
@@ -116,7 +117,7 @@
           creationTimestamp: null
           labels:
             role: alert-rules
-            release: prom-operator
+            release: "{{ prometheusOperator_name }}"
           name: prometheus-apache-rules
         spec:
           "{{ lookup('file', 'alerts/apache-exporter.yml') | from_yaml }}"

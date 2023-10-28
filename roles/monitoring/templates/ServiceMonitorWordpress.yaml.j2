@@ -1,12 +1,12 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: prom-operator-apache-exporter
+  name: "{{ prometheusOperator_name }}-apache-exporter"
   labels:
     app.kubernetes.io/component: metrics
     app.kubernetes.io/name: prometheus-apache-exporter
     jobLabel: apache-exporter
-    release: prom-operator
+    release: "{{ prometheusOperator_name }}"
 spec:
   selector:
     matchLabels:

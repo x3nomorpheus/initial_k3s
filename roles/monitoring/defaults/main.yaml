@@ -1,3 +1,13 @@
+prometheusOperator_namespace: kube-monitoring
+prometheusOperator_name: prom-operator
 grafana_password: 'prom-operator'
 grafana_domain: 'grafana.local'
 alertmanager_domain: 'alertmanager.local'
+efk_namespace: kube-logging
+efk_storageSpace: '25Gi'
+efk_elasticMemoryLimit: '2Gi'
+efk_elasticCpuLimit: '1000m'
+efk_timezone:  '+03:00'
+efk_fluentdMemoryLimit: '4Gi'
+efk_fluentdMemoryRequest: '2Gi'
+efk_fluentdCpuLimit: '200m'

@@ -2,8 +2,6 @@
 k3s_version: v1.22.3+k3s1
 ansible_user: root
 systemd_dir: /etc/systemd/system
-#!!! this is necessary variable
-os_type: 'Rocky'
 master_ip: "{{ hostvars[groups['master'][0]]['ansible_host'] | default(groups['master'][0]) }}"
 extra_server_args: >-
   --disable traefik
