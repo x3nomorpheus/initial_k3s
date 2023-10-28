@@ -74,8 +74,8 @@ spec:
               subPath: elasticsearch.yml
           resources:
             requests:
-              cpu: "{{ efk_elasticCpuLimit }}"
-              memory: "{{ efk_elasticMemoryLimit }}"
+              cpu: "{{ efk_elasticCpuRequests }}"
+              memory: "{{ efk_elasticMemoryRequests }}"
             limits:
               cpu: "{{ efk_elasticCpuLimit }}"
               memory: "{{ efk_elasticMemoryLimit }}" 

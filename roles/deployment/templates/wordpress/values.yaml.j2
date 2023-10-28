@@ -13,6 +13,6 @@ ingress:
   enabled: true
   tls: true
   annotations:
-    cert-manager.io/issuer: "{{ certmanager_issuer }}" 
+    cert-manager.io/cluster-issuer: "{{ certmanager_issuer }}" 
   hostname: {{ wordpress_domain }}
   ingressClassName: nginx
